@@ -1,4 +1,6 @@
+import { HttpError } from "../helpers/HttpError.js";
 import { catchAsync } from "../helpers/catchAsync.js";
+import { loginUserDataValidator, registerUserDataValidator } from "../helpers/userValidator.js";
 import {
   deleteToken,
   listUsers,
@@ -12,20 +14,39 @@ export const getAllUsers = catchAsync(async (req, res, next) => {
 });
 
 export const register = catchAsync(async (req, res) => {
-  const { newUser } = await registerUser({ ...req.body });
-  const { email, subscription } = newUser;
+   const { email, password } = req.body;
+
+  if (!password || password.trim() === "") {
+    throw HttpError(400, "Password is required");
+  }
+
+  const { value, error } = registerUserDataValidator({
+    email,
+    password,
+  });
+
+  if (error) {
+    throw HttpError(400, "Bad Request", error);
+  }
+
+
+  req.body = value;
+  const  newUser  = await registerUser({ ...req.body });
   res.status(201).json({
     newUser: {
-      email: email,
-      subscription: subscription,
+      email: newUser.email,
+      subscription: newUser.subscription,
     },
   });
 });
 
+
 export const login = catchAsync(async (req, res) => {
+    const { value, error } = loginUserDataValidator(req.body);
+  if (error) throw new HttpError(400, "Bad request", error);
+  req.body = value;
+  
   const { user, token } = await loginUser({ ...req.body });
-  console.log("User:", user);
-  console.log("Token:", token);
 
   const { email, subscription } = user;
   res.status(200).json({

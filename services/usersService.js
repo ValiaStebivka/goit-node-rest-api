@@ -7,19 +7,16 @@ export const checkUserExistsService = (filter) => User.exists(filter);
 
 export const registerUser = async (userData) => {
   const { email, password } = userData;
-
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     throw HttpError(409, "Email in use");
   }
-
   const hashedPassword = await bcrypt.hash(password, 10);
-
   const newUser = await User.create({ email, password: hashedPassword });
-  newUser.password = undefined;
 
   const token = signToken(newUser.id);
-  return { newUser, token };
+
+  return { email:newUser.email, subscription: newUser.subscription, token };
 };
 
 export const loginUser = async ({ email, password }) => {
@@ -50,6 +47,5 @@ export const getUserByIdService = (id) => User.findById(id);
 
 export async function deleteToken(id) {
   const result = await User.findByIdAndUpdate(id, { token: "" });
-  console.log(id);
   return result;
 }

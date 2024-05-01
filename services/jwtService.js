@@ -5,9 +5,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export const signToken = (id) =>
-  jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN,
-  });
+  jwt.sign({ id }, process.env.JWT_SECRET);
 
 export const checkToken = (token) => {
   if (!token) throw HttpError(401, "Not authorized");

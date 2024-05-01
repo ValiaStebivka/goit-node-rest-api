@@ -1,8 +1,6 @@
 import { Router } from "express";
 
 import {
-  checkLoginData,
-  checkRegisterData,
   protect,
 } from "../middelwares/authMiddelwares.js";
 import {
@@ -23,12 +21,11 @@ router.get("/current", protect, getCurrent);
 
 router.post(
   "/register",
-  checkRegisterData,
   validateBody(registerUserSchema),
   register
 );
 
-router.post("/login", checkLoginData, validateBody(loginUserSchema), login);
+router.post("/login", validateBody(loginUserSchema), login);
 
 router.post("/logout", protect, logout);
 
