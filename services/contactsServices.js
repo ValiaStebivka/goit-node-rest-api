@@ -23,7 +23,7 @@ async function addContact(data, owner) {
   return newContacts;
 }
 
-async function updateContactById(contactId, updateData, owner) {
+async function updateContactById(contactId, owner,updateData) {
   const updatedContact = await Contact.findByIdAndUpdate(
     {
       _id: contactId,

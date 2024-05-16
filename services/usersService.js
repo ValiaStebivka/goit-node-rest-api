@@ -34,6 +34,8 @@ export const loginUser = async ({ email, password }) => {
 
   user.password = undefined;
   const token = signToken(user.id);
+await user.updateOne({token})
+ 
 
   return { user, token };
 };
