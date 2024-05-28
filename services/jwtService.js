@@ -1,24 +1,20 @@
 import jwt from "jsonwebtoken";
 import { HttpError } from "../helpers/HttpError.js";
 import dotenv from "dotenv";
-import { getUserByIdService } from "./usersService.js";
 
 dotenv.config();
 
 export const signToken = (id) =>
-  jwt.sign({ id }, process.env.JWT_SECRET);
+  jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN,
+  });
 
-export const checkToken = async(token) => {
+export const checkToken = (token) => {
   if (!token) throw HttpError(401, "Not authorized");
-  
+
   try {
     const { id } = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await getUserByIdService(id)
-    if ( user.token !== token) {
-   throw HttpError(401, "Not authorized");
-      
-    }
-    return user;
+    return id;
   } catch (error) {
     throw HttpError(401, "Not authorized");
   }

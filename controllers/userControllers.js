@@ -1,11 +1,13 @@
-import { HttpError } from "../helpers/HttpError.js";
 import { catchAsync } from "../helpers/catchAsync.js";
-import { loginUserDataValidator, registerUserDataValidator } from "../helpers/userValidator.js";
+import { ImageService } from "../services/imageService.js";
 import {
   deleteToken,
+  findUserByToken,
   listUsers,
   loginUser,
   registerUser,
+  saveTokenToDatabase,
+  updateAvatarService,
 } from "../services/usersService.js";
 
 export const getAllUsers = catchAsync(async (req, res, next) => {
@@ -14,41 +16,25 @@ export const getAllUsers = catchAsync(async (req, res, next) => {
 });
 
 export const register = catchAsync(async (req, res) => {
-   const { email, password } = req.body;
+  const { newUser } = await registerUser({ ...req.body });
 
-  if (!password || password.trim() === "") {
-    throw HttpError(400, "Password is required");
-  }
-
-  const { value, error } = registerUserDataValidator({
-    email,
-    password,
-  });
-
-  if (error) {
-    throw HttpError(400, "Bad Request", error);
-  }
-
-
-  req.body = value;
-  const  newUser  = await registerUser({ ...req.body });
+  const { email, subscription, avatarURL } = newUser;
   res.status(201).json({
     newUser: {
-      email: newUser.email,
-      subscription: newUser.subscription,
+      email: email,
+      subscription: subscription,
+      avatarURL: avatarURL,
     },
   });
 });
 
-
 export const login = catchAsync(async (req, res) => {
-    const { value, error } = loginUserDataValidator(req.body);
-  if (error) throw new HttpError(400, "Bad request", error);
-  req.body = value;
-  
   const { user, token } = await loginUser({ ...req.body });
 
   const { email, subscription } = user;
+
+  await saveTokenToDatabase(user._id, token);
+
   res.status(200).json({
     user: {
       email: email,
@@ -58,17 +44,34 @@ export const login = catchAsync(async (req, res) => {
   });
 });
 
-export const getCurrent = (req, res) => {
-  const { email, subscription } = req.user;
+export const getCurrent = async (req, res) => {
+  const { email, subscription, avatarURL, token } = req.user;
+
+  const user = await findUserByToken(token);
+
+  if (!user) throw HttpError(401, "Not authorized");
+
   res.status(200).json({
     email,
     subscription,
+    avatarURL,
   });
 };
 
 export const logout = catchAsync(async (req, res) => {
   const { _id } = req.user;
-  await deleteToken(_id);
+  await deleteToken({ _id }, { token: null });
 
-  res.sendStatus(204);
+  res.status(204).send();
+});
+
+export const updateAvatar = catchAsync(async (req, res, next) => {
+  if (!req.file) {
+    return res.status(400).json({ message: "File is required" });
+  }
+  const user = await updateAvatarService(req.user, req.file);
+
+  res.status(200).json({
+    avatarURL: user.avatarURL,
+  });
 });

@@ -11,7 +11,7 @@ async function getContactById(contactId, owner) {
 }
 
 async function removeContact(contactId, owner) {
-  const contactToRemove = await Contact.findByIdAndDelete({
+  const contactToRemove = await Contact.findOneAndDelete({
     _id: contactId,
     owner: owner,
   });
@@ -23,8 +23,8 @@ async function addContact(data, owner) {
   return newContacts;
 }
 
-async function updateContactById(contactId, owner,updateData) {
-  const updatedContact = await Contact.findByIdAndUpdate(
+async function updateContactById(contactId, updateData, owner) {
+  const updatedContact = await Contact.findOneAndUpdate(
     {
       _id: contactId,
       owner: owner,
@@ -35,7 +35,7 @@ async function updateContactById(contactId, owner,updateData) {
   return updatedContact;
 }
 async function updateStatusContact(contactId, updateData, owner) {
-  const updatedContact = await Contact.findByIdAndUpdate(
+  const updatedContact = await Contact.findOneAndUpdate(
     {
       _id: contactId,
       owner: owner,
