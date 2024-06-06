@@ -29,7 +29,7 @@ export class ImageService {
         ? options.maxFileSize * 1024 * 1024
         : 1 * 1024 * 1024)
     ) {
-      throw new HttpError(400, "File is too large...");
+      throw HttpError(400, "File is too large...");
     }
     const fileName = `${v4()}.jpeg`;
     const tmpDir = path.join(process.cwd(), "tmp");
