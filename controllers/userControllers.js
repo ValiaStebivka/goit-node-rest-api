@@ -1,5 +1,7 @@
+import { error, log } from "console";
+import { HttpError } from "../helpers/HttpError.js";
 import { catchAsync } from "../helpers/catchAsync.js";
-import { ImageService } from "../services/imageService.js";
+import { User } from "../models/userModel.js";
 import {
   deleteToken,
   findUserByToken,
@@ -9,6 +11,8 @@ import {
   saveTokenToDatabase,
   updateAvatarService,
 } from "../services/usersService.js";
+
+import { msg } from "../helpers/msg.js";
 
 export const getAllUsers = catchAsync(async (req, res, next) => {
   const users = await listUsers();
@@ -45,7 +49,7 @@ export const login = catchAsync(async (req, res) => {
 });
 
 export const getCurrent = async (req, res) => {
-  const { email, subscription, avatarURL, token } = req.user;
+  const { email, subscription, token } = req.user;
 
   const user = await findUserByToken(token);
 
@@ -54,7 +58,6 @@ export const getCurrent = async (req, res) => {
   res.status(200).json({
     email,
     subscription,
-    avatarURL,
   });
 };
 
@@ -75,3 +78,45 @@ export const updateAvatar = catchAsync(async (req, res, next) => {
     avatarURL: user.avatarURL,
   });
 });
+
+export const verificationToken = async (req, res, next) => {
+  try {
+    const userId = req.params.verificationToken;
+
+    if (!userId) throw HttpError(404, "User not found");
+
+    const query = { verificationToken: userId };
+
+    const user = await User.findOne(query);
+
+    if (!user) throw HttpError(404, "User not found");
+
+    user.verificationToken = false;
+
+    user.verify = true;
+
+    user.save();
+
+    res.json({ message: "Verification successful" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verify = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) throw HttpError(400, "missing required field email");
+
+    const user = await User.findOne({ email });
+
+    if (user.verify === true)
+      throw HttpError(400, "Verification has already been passed");
+    msg(user.id, user.verificationToken, email);
+
+    res.json({ message: "Verification email sent" });
+  } catch (error) {
+    res.status(500).json({ error: error.message }); // Обробка помилки без next
+  }
+};

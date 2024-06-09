@@ -13,7 +13,7 @@ export class ImageService {
       if (file.mimetype.startsWith("image/")) {
         callback(null, true);
       } else {
-        callback( HttpError(400, "Please, upload images only..."), false);
+        callback(new HttpError(400, "Please, upload images only..."), false);
       }
     };
     return multer({
@@ -29,7 +29,7 @@ export class ImageService {
         ? options.maxFileSize * 1024 * 1024
         : 1 * 1024 * 1024)
     ) {
-      throw HttpError(400, "File is too large...");
+      throw new HttpError(400, "File is too large...");
     }
     const fileName = `${v4()}.jpeg`;
     const tmpDir = path.join(process.cwd(), "tmp");
